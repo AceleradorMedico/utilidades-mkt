@@ -1488,6 +1488,7 @@ async function saveFunil() {
   }
 
   closeModal('modal-funil');
+  document.getElementById('funil-id').value = '';
   toast(id ? 'Funil atualizado!' : 'Funil criado!', 'success');
   await loadFunis();
   if (id) loadFunilDetail(id);
@@ -1518,6 +1519,9 @@ async function saveLink() {
   if (error) { toast('Erro ao salvar link', 'error'); return; }
 
   closeModal('modal-link');
+  document.getElementById('link-titulo').value = '';
+  document.getElementById('link-url').value = '';
+  document.getElementById('link-id').value = '';
   toast('Link adicionado!', 'success');
   await loadFunilDetail(funil_id);
 }
@@ -1553,6 +1557,10 @@ async function saveProva() {
   if (error) { toast('Erro ao salvar', 'error'); return; }
 
   closeModal('modal-prova');
+  document.getElementById('prova-id').value = '';
+  document.getElementById('prova-titulo').value = '';
+  document.getElementById('prova-url').value = '';
+  document.getElementById('prova-tipo').value = '';
   toast('Prova social adicionada!', 'success');
   await loadProvas();
   renderProvas();
