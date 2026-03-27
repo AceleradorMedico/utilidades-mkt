@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninguém Perdido — AM Marketing</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --yellow: #F5A623;
+    --yellow-dim: rgba(245,166,35,0.12);
+    --yellow-hover: rgba(245,166,35,0.2);
+    --text: #f0f0f0;
+    --muted: #666666;
+    --muted2: #444444;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --radius: 6px;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body: 'Barlow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ---- SCROLLBAR ---- */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 2px; }
+
+  /* ---- LOGIN ---- */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 40px 36px;
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .login-logo svg { width: 32px; height: 32px; }
+
+  .login-logo span {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--yellow);
+    text-transform: uppercase;
+  }
+
+  .login-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--yellow);
+  }
+
+  .field select option { background: var(--surface2); }
+  .field textarea { resize: vertical; min-height: 80px; }
+
+  /* ---- BUTTONS ---- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--yellow);
+    color: #000;
+  }
+
+  .btn-primary:hover { background: #fbb733; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(231,76,60,0.3);
+  }
+
+  .btn-danger:hover { background: rgba(231,76,60,0.1); }
+
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ---- APP LAYOUT ---- */
+  #app { display: none; min-height: 100vh; }
+
+  /* ---- TOPBAR ---- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .topbar-logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--yellow);
+  }
+
+  .topbar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+  }
+
+  .topbar-nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover, .nav-btn.active {
+    color: var(--yellow);
+    background: var(--yellow-dim);
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-badge {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .user-type {
+    background: var(--yellow-dim);
+    color: var(--yellow);
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* ---- MAIN CONTENT ---- */
+  .main {
+    padding: 28px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ---- PAGES ---- */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ---- PAGE HEADER ---- */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .page-title span { color: var(--yellow); }
+
+  .page-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* ---- SEARCH + FILTER BAR ---- */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 12px 10px 38px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus { border-color: var(--yellow); }
+
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    cursor: pointer;
+    min-width: 130px;
+  }
+
+  .filter-select:focus { border-color: var(--yellow); }
+
+  /* ---- FUNIS GRID ---- */
+  .funis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .funil-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .funil-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--yellow);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .funil-card:hover { border-color: var(--yellow); background: var(--surface2); }
+  .funil-card:hover::before { opacity: 1; }
+
+  .funil-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .funil-nome {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    flex: 1;
+    padding-right: 10px;
+  }
+
+  .status-badge {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .status-ativo { background: rgba(46,204,113,0.15); color: var(--green); }
+  .status-inativo { background: rgba(102,102,102,0.15); color: var(--muted); }
+
+  .funil-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .funil-meta-item { display: flex; align-items: center; gap: 4px; }
+
+  /* ---- BACK BUTTON ---- */
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding: 0;
+    transition: color 0.15s;
+  }
+
+  .back-btn:hover { color: var(--yellow); }
+
+  /* ---- FUNIL DETAIL ---- */
+  .funil-detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .funil-detail-title {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ---- INFO GRID ---- */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+
+  .info-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .info-value {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .info-value.yellow { color: var(--yellow); }
+
+  /* ---- INVESTIMENTOS ---- */
+  .invest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .invest-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .invest-canal {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .invest-valor {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--yellow);
+  }
+
+  .invest-total {
+    background: var(--yellow-dim);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .invest-total .invest-canal { color: var(--yellow); }
+
+  /* ---- LINKS SECTION ---- */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .links-categories { display: flex; flex-direction: column; gap: 16px; }
+
+  .cat-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .cat-name {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--yellow);
+  }
+
+  .cat-count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .links-list { padding: 8px 0; }
+
+  .link-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    gap: 12px;
+  }
+
+  .link-item:last-child { border-bottom: none; }
+  .link-item:hover { background: var(--surface2); }
+
+  .link-titulo {
+    font-size: 13px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .link-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .link-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--yellow-dim);
+    color: var(--yellow);
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .link-open:hover { background: var(--yellow-hover); }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .icon-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .empty-cat {
+    padding: 16px;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* ---- PROVAS SOCIAIS ---- */
+  .provas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .prova-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color 0.15s;
+  }
+
+  .prova-card:hover { border-color: var(--yellow); }
+
+  .prova-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    background: var(--yellow-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--yellow);
+  }
+
+  .prova-info { flex: 1; min-width: 0; }
+
+  .prova-titulo {
+    font-weight: 600;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 2px;
+  }
+
+  .prova-tipo {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 560px;
+    padding: 28px;
+    position: relative;
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ---- INVEST FORM ---- */
+  .invest-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+  }
+
+  /* ---- TOAST ---- */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 500;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.2s;
+    pointer-events: none;
+    max-width: 320px;
+  }
+
+  #toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state svg { margin-bottom: 16px; opacity: 0.3; }
+
+  .empty-state p {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    color: var(--muted);
+  }
+
+  .empty-state small { font-size: 13px; }
+
+  /* ---- LOADING ---- */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    padding: 40px 0;
+    justify-content: center;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--yellow);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 600px) {
+    .topbar { padding: 0 14px; }
+    .main { padding: 20px 14px; }
+    .funis-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    .topbar-logo { font-size: 16px; }
+    .page-title { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <polygon points="16,2 28,26 4,26" fill="none" stroke="#F5A623" stroke-width="3"/>
+        <line x1="10" y1="26" x2="16" y2="14" stroke="#F5A623" stroke-width="3"/>
+      </svg>
+      <span>Acelerador Médico</span>
+    </div>
+    <div class="login-title">Ninguém<br>Perdido</div>
+    <div class="login-sub">Central de ativos de marketing</div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="seu@email.com">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-error" style="color:var(--red);font-size:13px;margin-bottom:12px;display:none;"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- ========== APP ========== -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Ninguém Perdido</div>
+      <div class="topbar-divider"></div>
+      <nav class="topbar-nav">
+        <button class="nav-btn active" onclick="goPage('funis')">Funis</button>
+        <button class="nav-btn" onclick="goPage('provas')">Provas Sociais</button>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <span id="user-email-display"></span>
+        <span class="user-type" id="user-type-display">—</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ===== PAGE: FUNIS LIST ===== -->
+    <div class="page active" id="page-funis">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Funis <span>Ativos</span></div>
+          <div class="page-sub">Selecione um funil para ver todos os recursos</div>
+        </div>
+        <button class="btn btn-primary" id="btn-novo-funil" style="display:none" onclick="openFunilModal()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2"/></svg>
+          Novo Funil
+        </button>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#666" stroke-width="1.5"/><line x1="9.5" y1="9.5" x2="13" y2="13" stroke="#666" stroke-width="1.5"/></svg>
+          <input class="search-input" id="funis-search" placeholder="Buscar funil..." oninput="renderFunis()">
+        </div>
+        <select class="filter-select" id="funis-filter" onchange="renderFunis()">
+          <option value="">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+        </select>
+      </div>
+      <div id="funis-container"><div class="loading"><div class="spinner"></div> Carregando...</div></div>
+    </div>
+
+    <!-- ===== PAGE: FUNIL DETAIL ===== -->
+    <div class="page" id="page-funil-detail">
+      <button class="back-btn" onclick="goPage('funis')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="9,2 3,7 9,12" stroke="currentColor" stroke-width="2"/></svg>
+        Todos os funis
+      </button>
+      <div id="funil-detail-content"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- ===== PAGE: PROVAS SOCIAIS ===== -->
+    <div class="page" id="page-provas">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Provas <span>Sociais</span></div>
+          <div class="page-sub">Depoimentos, resultados e materiais de prova</div>
+        </div>
+        <button class="btn btn-primary" id="btn-nova-prova" style="display:none" onclick="openProvaModal()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2"/></svg>
+          Adicionar
+        </button>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#666" stroke-width="1.5"/><line x1="9.5" y1="9.5" x2="13" y2="13" stroke="#666" stroke-width="1.5"/></svg>
+          <input class="search-input" id="provas-search" placeholder="Buscar prova social..." oninput="renderProvas()">
+        </div>
+      </div>
+      <div id="provas-container"><div class="loading"><div class="spinner"></div> Carregando...</div></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ========== MODAL: FUNIL ========== -->
+<div class="modal-overlay" id="modal-funil">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-funil')">×</button>
+    <div class="modal-title" id="modal-funil-title">Novo Funil</div>
+    <input type="hidden" id="funil-id">
+    <div class="field">
+      <label>Nome do Funil *</label>
+      <input type="text" id="funil-nome" placeholder="Ex: Meteórico Março">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Status *</label>
+        <select id="funil-status">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Data de Início *</label>
+        <input type="date" id="funil-inicio">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Data de Fim</label>
+        <input type="date" id="funil-fim">
+      </div>
+      <div class="field">
+        <label>Previsão de Fim</label>
+        <input type="date" id="funil-previsao">
+      </div>
+    </div>
+    <div style="margin-bottom:8px;">
+      <div class="section-title" style="margin-bottom:10px;">Investimentos</div>
+      <div class="invest-form">
+        <div class="field" style="margin:0">
+          <label>Ads (R$)</label>
+          <input type="number" id="inv-ads" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Disparo (R$)</label>
+          <input type="number" id="inv-disparo" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Ligação (R$)</label>
+          <input type="number" id="inv-ligacao" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="field" style="margin:0">
+          <label>SMS (R$)</label>
+          <input type="number" id="inv-sms" min="0" step="0.01" placeholder="0,00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-funil')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFunil()">Salvar Funil</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: LINK ========== -->
+<div class="modal-overlay" id="modal-link">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-link')">×</button>
+    <div class="modal-title">Adicionar Link</div>
+    <input type="hidden" id="link-funil-id">
+    <input type="hidden" id="link-id">
+    <div class="field">
+      <label>Categoria *</label>
+      <select id="link-cat">
+        <option value="copy_paginas">Copy de Páginas</option>
+        <option value="criativos">Criativos</option>
+        <option value="mensagens">Mensagens</option>
+        <option value="ligacoes">Ligações</option>
+        <option value="ads_estaticos">Ads Estáticos</option>
+        <option value="ads_video">Ads Vídeo</option>
+        <option value="pagina_captura">Página de Captura</option>
+        <option value="pagina_venda">Página de Venda</option>
+        <option value="pagina_obrigado">Página de Obrigado</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Título *</label>
+      <input type="text" id="link-titulo" placeholder="Ex: Copy principal landing page">
+    </div>
+    <div class="field">
+      <label>URL *</label>
+      <input type="url" id="link-url" placeholder="https://...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-link')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveLink()">Salvar Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: PROVA SOCIAL ========== -->
+<div class="modal-overlay" id="modal-prova">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-prova')">×</button>
+    <div class="modal-title">Prova Social</div>
+    <input type="hidden" id="prova-id">
+    <div class="field">
+      <label>Título *</label>
+      <input type="text" id="prova-titulo" placeholder="Ex: Depoimento Dr. Carlos">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Tipo</label>
+        <select id="prova-tipo">
+          <option value="">Selecionar</option>
+          <option value="imagem">Imagem</option>
+          <option value="video">Vídeo</option>
+          <option value="documento">Documento</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>URL *</label>
+        <input type="url" id="prova-url" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-prova')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProva()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG SUPABASE
+// ============================================================
+const SUPABASE_URL = 'https://lscviwtqczikgqtaoftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzY3Zpd3RxY3ppa2dxdGFvZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3OTcsImV4cCI6MjA5MDIxMjc5N30.k84a_EoU97H7FVr5rOdspADSD7vZ4IbhBSNjg8Vg0cQ';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let isAdmin = false;
+let allFunis = [];
+let allProvas = [];
+let currentFunilId = null;
+
+// ============================================================
+// CATEGORIAS
+// ============================================================
+const CATEGORIAS = {
+  copy_paginas: 'Copy de Páginas',
+  criativos: 'Criativos',
+  mensagens: 'Mensagens',
+  ligacoes: 'Ligações',
+  ads_estaticos: 'Ads Estáticos',
+  ads_video: 'Ads Vídeo',
+  pagina_captura: 'Página de Captura',
+  pagina_venda: 'Página de Venda',
+  pagina_obrigado: 'Página de Obrigado'
+};
+
+const CANAIS_LABEL = { ads: 'Ads', disparo: 'Disparo', ligacao: 'Ligação', sms: 'SMS' };
+
+const PROVA_ICONS = {
+  imagem: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.5" fill="currentColor"/><polyline points="1,12 6,7 10,11 13,8 17,12" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>`,
+  video: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="3" width="11" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><polyline points="12,7 17,4 17,14 12,11" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>`,
+  documento: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 2h8l4 4v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5"/><polyline points="11,2 11,6 15,6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>`,
+  default: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 2h8l4 4v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5"/></svg>`
+};
+
+// ============================================================
+// AUTH
+// ============================================================
+async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    await setUser(session.user);
+  }
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (session) await setUser(session.user);
+    else showLogin();
+  });
+}
+
+async function setUser(user) {
+  currentUser = user;
+  // Check if admin in usuarios table
+  const { data } = await db.from('usuarios').select('tipo').eq('email', user.email).single();
+  isAdmin = data?.tipo === 'admin';
+  document.getElementById('user-email-display').textContent = user.email;
+  document.getElementById('user-type-display').textContent = isAdmin ? 'Admin' : 'Viewer';
+  if (isAdmin) {
+    document.getElementById('btn-novo-funil').style.display = 'inline-flex';
+    document.getElementById('btn-nova-prova').style.display = 'inline-flex';
+  }
+  showApp();
+  await loadFunis();
+  await loadProvas();
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !senha) { errEl.textContent = 'Preencha email e senha.'; errEl.style.display = 'block'; return; }
+  const { error } = await db.auth.signInWithPassword({ email, password: senha });
+  if (error) { errEl.textContent = 'Email ou senha inválidos.'; errEl.style.display = 'block'; }
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  currentUser = null; isAdmin = false;
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goPage(page, funilId = null) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  if (page === 'funis') {
+    document.getElementById('page-funis').classList.add('active');
+    document.querySelectorAll('.nav-btn')[0].classList.add('active');
+  } else if (page === 'funil-detail') {
+    document.getElementById('page-funil-detail').classList.add('active');
+    currentFunilId = funilId;
+    loadFunilDetail(funilId);
+  } else if (page === 'provas') {
+    document.getElementById('page-provas').classList.add('active');
+    document.querySelectorAll('.nav-btn')[1].classList.add('active');
+    renderProvas();
+  }
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// FUNIS LIST
+// ============================================================
+async function loadFunis() {
+  const { data, error } = await db.from('funis').select('*').order('criado_em', { ascending: false });
+  if (error) { toast('Erro ao carregar funis', 'error'); return; }
+  allFunis = data || [];
+  renderFunis();
+}
+
+function renderFunis() {
+  const search = document.getElementById('funis-search').value.toLowerCase();
+  const filter = document.getElementById('funis-filter').value;
+  const container = document.getElementById('funis-container');
+
+  let funis = allFunis.filter(f => {
+    const matchSearch = f.nome.toLowerCase().includes(search);
+    const matchFilter = filter ? f.status === filter : true;
+    return matchSearch && matchFilter;
+  });
+
+  if (!funis.length) {
+    container.innerHTML = `<div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="4" y="4" width="32" height="32" rx="4" stroke="#444" stroke-width="2"/><line x1="12" y1="16" x2="28" y2="16" stroke="#444" stroke-width="2"/><line x1="12" y1="22" x2="22" y2="22" stroke="#444" stroke-width="2"/></svg>
+      <p>Nenhum funil encontrado</p>
+      <small>${isAdmin ? 'Clique em "Novo Funil" para começar' : 'Aguarde um admin cadastrar funis'}</small>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="funis-grid">${funis.map(f => `
+    <div class="funil-card" onclick="goPage('funil-detail','${f.id}')">
+      <div class="funil-card-header">
+        <div class="funil-nome">${esc(f.nome)}</div>
+        <span class="status-badge status-${f.status}">${f.status}</span>
+      </div>
+      <div class="funil-meta">
+        <div class="funil-meta-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1" stroke="#666" stroke-width="1.2"/><line x1="4" y1="1" x2="4" y2="4" stroke="#666" stroke-width="1.2"/><line x1="8" y1="1" x2="8" y2="4" stroke="#666" stroke-width="1.2"/></svg>
+          ${fmtDate(f.data_inicio)}
+        </div>
+        ${f.data_fim ? `<div class="funil-meta-item">até ${fmtDate(f.data_fim)}</div>` : ''}
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+// ============================================================
+// FUNIL DETAIL
+// ============================================================
+async function loadFunilDetail(id) {
+  document.getElementById('funil-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div> Carregando...</div>';
+
+  const [funilRes, linksRes, investRes] = await Promise.all([
+    db.from('funis').select('*').eq('id', id).single(),
+    db.from('links_funil').select('*').eq('funil_id', id).order('criado_em'),
+    db.from('investimentos').select('*').eq('funil_id', id)
+  ]);
+
+  if (funilRes.error) { toast('Erro ao carregar funil', 'error'); return; }
+
+  const f = funilRes.data;
+  const links = linksRes.data || [];
+  const invests = investRes.data || [];
+
+  const investMap = {};
+  invests.forEach(i => investMap[i.canal] = i.valor);
+  const totalInvest = Object.values(investMap).reduce((a, b) => a + parseFloat(b || 0), 0);
+
+  // Group links by category
+  const linksBycat = {};
+  Object.keys(CATEGORIAS).forEach(k => linksBycat[k] = []);
+  links.forEach(l => { if (linksBycat[l.categoria]) linksBycat[l.categoria].push(l); });
+
+  const adminActions = isAdmin ? `
+    <div class="detail-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openFunilModal('${id}')">Editar Funil</button>
+      <button class="btn btn-primary btn-sm" onclick="openLinkModal('${id}')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="2"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="2"/></svg>
+        Adicionar Link
+      </button>
+    </div>` : '';
+
+  document.getElementById('funil-detail-content').innerHTML = `
+    <div class="funil-detail-header">
+      <div>
+        <div class="funil-detail-title">${esc(f.nome)}</div>
+      </div>
+      ${adminActions}
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Status</div>
+        <div class="info-value"><span class="status-badge status-${f.status}">${f.status}</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Início</div>
+        <div class="info-value">${fmtDate(f.data_inicio)}</div>
+      </div>
+      ${f.data_fim ? `<div class="info-card"><div class="info-label">Fim</div><div class="info-value">${fmtDate(f.data_fim)}</div></div>` : ''}
+      ${f.previsao_fim ? `<div class="info-card"><div class="info-label">Previsão de Fim</div><div class="info-value">${fmtDate(f.previsao_fim)}</div></div>` : ''}
+    </div>
+
+    ${Object.keys(investMap).length ? `
+    <div class="section-header"><div class="section-title">Investimentos</div></div>
+    <div class="invest-grid">
+      ${Object.entries(CANAIS_LABEL).map(([k, label]) => investMap[k] ? `
+        <div class="invest-item">
+          <span class="invest-canal">${label}</span>
+          <span class="invest-valor">${fmtMoney(investMap[k])}</span>
+        </div>` : '').join('')}
+    </div>
+    <div class="invest-total">
+      <span class="invest-canal">Total Investido</span>
+      <span class="invest-valor">${fmtMoney(totalInvest)}</span>
+    </div>` : ''}
+
+    <div class="section-header"><div class="section-title">Links & Materiais</div></div>
+    <div class="links-categories">
+      ${Object.entries(CATEGORIAS).map(([k, label]) => {
+        const catLinks = linksBycat[k] || [];
+        return `<div class="cat-block" id="cat-${k}">
+          <div class="cat-header">
+            <span class="cat-name">${label}</span>
+            <span class="cat-count">${catLinks.length} ${catLinks.length === 1 ? 'link' : 'links'}</span>
+          </div>
+          <div class="links-list" id="links-${k}">
+            ${catLinks.length ? catLinks.map(l => renderLinkItem(l)).join('') : `<div class="empty-cat">Nenhum link cadastrado</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderLinkItem(l) {
+  const deleteBtn = isAdmin ? `<button class="icon-btn" onclick="deleteLink('${l.id}','${l.funil_id}')" title="Remover">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.8"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.8"/></svg>
+  </button>` : '';
+  return `<div class="link-item">
+    <span class="link-titulo" title="${esc(l.titulo)}">${esc(l.titulo)}</span>
+    <div class="link-actions">
+      <a class="link-open" href="${esc(l.url)}" target="_blank" rel="noopener">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5 2H2a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1V6" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="5" x2="10" y2="1" stroke="currentColor" stroke-width="1.5"/><polyline points="7,1 10,1 10,4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        Abrir
+      </a>
+      ${deleteBtn}
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// PROVAS SOCIAIS
+// ============================================================
+async function loadProvas() {
+  const { data, error } = await db.from('provas_sociais').select('*').order('criado_em', { ascending: false });
+  if (error) return;
+  allProvas = data || [];
+}
+
+function renderProvas() {
+  const search = document.getElementById('provas-search').value.toLowerCase();
+  const container = document.getElementById('provas-container');
+  const provas = allProvas.filter(p => p.titulo.toLowerCase().includes(search));
+
+  if (!provas.length) {
+    container.innerHTML = `<div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" stroke="#444" stroke-width="2"/><line x1="20" y1="12" x2="20" y2="20" stroke="#444" stroke-width="2"/><circle cx="20" cy="26" r="1.5" fill="#444"/></svg>
+      <p>Nenhuma prova social</p>
+      <small>${isAdmin ? 'Adicione a primeira prova social' : 'Nenhuma prova cadastrada ainda'}</small>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="provas-grid">${provas.map(p => `
+    <div class="prova-card">
+      <div class="prova-icon">${PROVA_ICONS[p.tipo] || PROVA_ICONS.default}</div>
+      <div class="prova-info">
+        <div class="prova-titulo" title="${esc(p.titulo)}">${esc(p.titulo)}</div>
+        ${p.tipo ? `<div class="prova-tipo">${p.tipo}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <a class="link-open" href="${esc(p.url)}" target="_blank" rel="noopener">Abrir</a>
+        ${isAdmin ? `<button class="icon-btn" onclick="deleteProva('${p.id}')" title="Remover">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.8"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.8"/></svg>
+        </button>` : ''}
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+// ============================================================
+// MODAL: FUNIL
+// ============================================================
+async function openFunilModal(id = null) {
+  document.getElementById('funil-id').value = id || '';
+  document.getElementById('modal-funil-title').textContent = id ? 'Editar Funil' : 'Novo Funil';
+
+  // Reset
+  ['funil-nome','funil-inicio','funil-fim','funil-previsao','inv-ads','inv-disparo','inv-ligacao','inv-sms']
+    .forEach(f => document.getElementById(f).value = '');
+  document.getElementById('funil-status').value = 'ativo';
+
+  if (id) {
+    const [funilRes, investRes] = await Promise.all([
+      db.from('funis').select('*').eq('id', id).single(),
+      db.from('investimentos').select('*').eq('funil_id', id)
+    ]);
+    if (funilRes.data) {
+      const f = funilRes.data;
+      document.getElementById('funil-nome').value = f.nome;
+      document.getElementById('funil-status').value = f.status;
+      document.getElementById('funil-inicio').value = f.data_inicio || '';
+      document.getElementById('funil-fim').value = f.data_fim || '';
+      document.getElementById('funil-previsao').value = f.previsao_fim || '';
+    }
+    if (investRes.data) {
+      investRes.data.forEach(i => {
+        const el = document.getElementById(`inv-${i.canal}`);
+        if (el) el.value = i.valor;
+      });
+    }
+  }
+  openModal('modal-funil');
+}
+
+async function saveFunil() {
+  const id = document.getElementById('funil-id').value;
+  const nome = document.getElementById('funil-nome').value.trim();
+  const status = document.getElementById('funil-status').value;
+  const data_inicio = document.getElementById('funil-inicio').value;
+
+  if (!nome || !data_inicio) { toast('Nome e data de início são obrigatórios', 'error'); return; }
+
+  const payload = {
+    nome,
+    status,
+    data_inicio,
+    data_fim: document.getElementById('funil-fim').value || null,
+    previsao_fim: document.getElementById('funil-previsao').value || null,
+  };
+
+  let funilId = id;
+
+  if (id) {
+    const { error } = await db.from('funis').update(payload).eq('id', id);
+    if (error) { toast('Erro ao salvar funil', 'error'); return; }
+  } else {
+    payload.criado_por = currentUser.id;
+    const { data, error } = await db.from('funis').insert(payload).select().single();
+    if (error) { toast('Erro ao criar funil', 'error'); return; }
+    funilId = data.id;
+  }
+
+  // Save investments (upsert)
+  const canais = ['ads', 'disparo', 'ligacao', 'sms'];
+  for (const canal of canais) {
+    const val = parseFloat(document.getElementById(`inv-${canal}`).value) || 0;
+    await db.from('investimentos').upsert({ funil_id: funilId, canal, valor: val }, { onConflict: 'funil_id,canal' });
+  }
+
+  closeModal('modal-funil');
+  toast(id ? 'Funil atualizado!' : 'Funil criado!', 'success');
+  await loadFunis();
+  if (id) loadFunilDetail(id);
+}
+
+// ============================================================
+// MODAL: LINK
+// ============================================================
+function openLinkModal(funilId) {
+  document.getElementById('link-funil-id').value = funilId;
+  document.getElementById('link-id').value = '';
+  document.getElementById('link-titulo').value = '';
+  document.getElementById('link-url').value = '';
+  document.getElementById('link-cat').value = 'copy_paginas';
+  openModal('modal-link');
+}
+
+async function saveLink() {
+  const funil_id = document.getElementById('link-funil-id').value;
+  const titulo = document.getElementById('link-titulo').value.trim();
+  const url = document.getElementById('link-url').value.trim();
+  const categoria = document.getElementById('link-cat').value;
+
+  if (!titulo || !url) { toast('Título e URL são obrigatórios', 'error'); return; }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) { toast('URL deve começar com http:// ou https://', 'error'); return; }
+
+  const { error } = await db.from('links_funil').insert({ funil_id, categoria, titulo, url });
+  if (error) { toast('Erro ao salvar link', 'error'); return; }
+
+  closeModal('modal-link');
+  toast('Link adicionado!', 'success');
+  loadFunilDetail(funil_id);
+}
+
+async function deleteLink(linkId, funilId) {
+  if (!confirm('Remover este link?')) return;
+  const { error } = await db.from('links_funil').delete().eq('id', linkId);
+  if (error) { toast('Erro ao remover link', 'error'); return; }
+  toast('Link removido', 'success');
+  loadFunilDetail(funilId);
+}
+
+// ============================================================
+// MODAL: PROVA SOCIAL
+// ============================================================
+function openProvaModal() {
+  document.getElementById('prova-id').value = '';
+  document.getElementById('prova-titulo').value = '';
+  document.getElementById('prova-url').value = '';
+  document.getElementById('prova-tipo').value = '';
+  openModal('modal-prova');
+}
+
+async function saveProva() {
+  const titulo = document.getElementById('prova-titulo').value.trim();
+  const url = document.getElementById('prova-url').value.trim();
+  const tipo = document.getElementById('prova-tipo').value || null;
+
+  if (!titulo || !url) { toast('Título e URL são obrigatórios', 'error'); return; }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) { toast('URL inválida', 'error'); return; }
+
+  const { error } = await db.from('provas_sociais').insert({ titulo, url, tipo });
+  if (error) { toast('Erro ao salvar', 'error'); return; }
+
+  closeModal('modal-prova');
+  toast('Prova social adicionada!', 'success');
+  await loadProvas();
+  renderProvas();
+}
+
+async function deleteProva(id) {
+  if (!confirm('Remover esta prova social?')) return;
+  const { error } = await db.from('provas_sociais').delete().eq('id', id);
+  if (error) { toast('Erro ao remover', 'error'); return; }
+  toast('Removida', 'success');
+  await loadProvas();
+  renderProvas();
+}
+
+// ============================================================
+// MODAL UTILS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function fmtMoney(v) {
+  return 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+init();
+</script>
+</body>
+</html>
