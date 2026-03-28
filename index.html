@@ -1480,11 +1480,14 @@ async function saveFunil() {
     funilId = data.id;
   }
 
-  // Save investments (upsert)
+  // Save investments (delete + insert)
   const canais = ['ads', 'disparo', 'ligacao', 'sms'];
-  for (const canal of canais) {
-    const val = parseFloat(document.getElementById(`inv-${canal}`).value) || 0;
-    await db.from('investimentos').upsert({ funil_id: funilId, canal, valor: val }, { onConflict: 'funil_id,canal' });
+  await db.from('investimentos').delete().eq('funil_id', funilId);
+  const investRows = canais
+    .map(canal => ({ funil_id: funilId, canal, valor: parseFloat(document.getElementById(`inv-${canal}`).value) || 0 }))
+    .filter(r => r.valor > 0);
+  if (investRows.length) {
+    await db.from('investimentos').insert(investRows);
   }
 
   closeModal('modal-funil');
