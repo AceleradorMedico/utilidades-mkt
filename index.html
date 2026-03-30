@@ -1518,10 +1518,22 @@ function openLinkModal(funilId) {
   document.getElementById('link-titulo').value = '';
   document.getElementById('link-url').value = '';
   document.getElementById('link-cat').value = 'copy_paginas';
+  document.getElementById('modal-link-title').textContent = 'Adicionar Link';
+  openModal('modal-link');
+}
+
+function editLink(linkId, funilId, categoria, titulo, url) {
+  document.getElementById('link-id').value = linkId;
+  document.getElementById('link-funil-id').value = funilId;
+  document.getElementById('link-cat').value = categoria;
+  document.getElementById('link-titulo').value = titulo;
+  document.getElementById('link-url').value = url;
+  document.getElementById('modal-link-title').textContent = 'Editar Link';
   openModal('modal-link');
 }
 
 async function saveLink() {
+  const id = document.getElementById('link-id').value;
   const funil_id = document.getElementById('link-funil-id').value;
   const titulo = document.getElementById('link-titulo').value.trim();
   const url = document.getElementById('link-url').value.trim();
@@ -1530,14 +1542,19 @@ async function saveLink() {
   if (!titulo || !url) { toast('Título e URL são obrigatórios', 'error'); return; }
   if (!url.startsWith('http://') && !url.startsWith('https://')) { toast('URL deve começar com http:// ou https://', 'error'); return; }
 
-  const { error } = await db.from('links_funil').insert({ funil_id, categoria, titulo, url });
+  let error;
+  if (id) {
+    ({ error } = await db.from('links_funil').update({ categoria, titulo, url }).eq('id', id));
+  } else {
+    ({ error } = await db.from('links_funil').insert({ funil_id, categoria, titulo, url }));
+  }
   if (error) { toast('Erro ao salvar link', 'error'); return; }
 
   closeModal('modal-link');
   document.getElementById('link-titulo').value = '';
   document.getElementById('link-url').value = '';
   document.getElementById('link-id').value = '';
-  toast('Link adicionado!', 'success');
+  toast(id ? 'Link atualizado!' : 'Link adicionado!', 'success');
   await loadFunilDetail(funil_id);
 }
 
@@ -1557,10 +1574,21 @@ function openProvaModal() {
   document.getElementById('prova-titulo').value = '';
   document.getElementById('prova-url').value = '';
   document.getElementById('prova-tipo').value = '';
+  document.getElementById('modal-prova-title').textContent = 'Nova Prova Social';
+  openModal('modal-prova');
+}
+
+function editProva(id, titulo, url, tipo) {
+  document.getElementById('prova-id').value = id;
+  document.getElementById('prova-titulo').value = titulo;
+  document.getElementById('prova-url').value = url;
+  document.getElementById('prova-tipo').value = tipo || '';
+  document.getElementById('modal-prova-title').textContent = 'Editar Prova Social';
   openModal('modal-prova');
 }
 
 async function saveProva() {
+  const id = document.getElementById('prova-id').value;
   const titulo = document.getElementById('prova-titulo').value.trim();
   const url = document.getElementById('prova-url').value.trim();
   const tipo = document.getElementById('prova-tipo').value || null;
@@ -1568,7 +1596,12 @@ async function saveProva() {
   if (!titulo || !url) { toast('Título e URL são obrigatórios', 'error'); return; }
   if (!url.startsWith('http://') && !url.startsWith('https://')) { toast('URL inválida', 'error'); return; }
 
-  const { error } = await db.from('provas_sociais').insert({ titulo, url, tipo });
+  let error;
+  if (id) {
+    ({ error } = await db.from('provas_sociais').update({ titulo, url, tipo }).eq('id', id));
+  } else {
+    ({ error } = await db.from('provas_sociais').insert({ titulo, url, tipo }));
+  }
   if (error) { toast('Erro ao salvar', 'error'); return; }
 
   closeModal('modal-prova');
@@ -1576,7 +1609,7 @@ async function saveProva() {
   document.getElementById('prova-titulo').value = '';
   document.getElementById('prova-url').value = '';
   document.getElementById('prova-tipo').value = '';
-  toast('Prova social adicionada!', 'success');
+  toast(id ? 'Prova atualizada!' : 'Prova social adicionada!', 'success');
   await loadProvas();
   renderProvas();
 }
