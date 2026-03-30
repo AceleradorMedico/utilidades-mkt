@@ -1037,7 +1037,7 @@
 <div class="modal-overlay" id="modal-link">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-link')">×</button>
-    <div class="modal-title">Adicionar Link</div>
+    <div class="modal-title" id="modal-link-title">Adicionar Link</div>
     <input type="hidden" id="link-funil-id">
     <input type="hidden" id="link-id">
     <div class="field">
@@ -1073,7 +1073,7 @@
 <div class="modal-overlay" id="modal-prova">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-prova')">×</button>
-    <div class="modal-title">Prova Social</div>
+    <div class="modal-title" id="modal-prova-title">Prova Social</div>
     <input type="hidden" id="prova-id">
     <div class="field">
       <label>Título *</label>
@@ -1109,7 +1109,7 @@
 // CONFIG SUPABASE
 // ============================================================
 const SUPABASE_URL = 'https://lscviwtqczikgqtaoftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzY3Zpd3RxY3ppa2dxdGFvZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3OTcsImV4cCI6MjA5MDIxMjc5N30.k84a_EoU97H7FVr5rOdspADSD7vZ4IbhBSNjg8Vg0cQ';
+const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1206,17 +1206,22 @@ function showApp() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-function goPage(page, funilId = null) {
+let _loadingDetail = false;
+
+async function goPage(page, funilId = null) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
   if (page === 'funis') {
     document.getElementById('page-funis').classList.add('active');
     document.querySelectorAll('.nav-btn')[0].classList.add('active');
+    renderFunis();
   } else if (page === 'funil-detail') {
+    if (_loadingDetail) return;
+    _loadingDetail = true;
     document.getElementById('page-funil-detail').classList.add('active');
     currentFunilId = funilId;
-    loadFunilDetail(funilId);
+    try { await loadFunilDetail(funilId); } finally { _loadingDetail = false; }
   } else if (page === 'provas') {
     document.getElementById('page-provas').classList.add('active');
     document.querySelectorAll('.nav-btn')[1].classList.add('active');
@@ -1365,6 +1370,9 @@ function renderLinkItem(l) {
   const deleteBtn = isAdmin ? `<button class="icon-btn" onclick="deleteLink('${l.id}','${l.funil_id}')" title="Remover">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.8"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.8"/></svg>
   </button>` : '';
+  const editBtn = isAdmin ? `<button class="icon-btn" onclick="editLink('${l.id}','${l.funil_id}','${l.categoria}',${JSON.stringify(l.titulo)},${JSON.stringify(l.url)})" title="Editar" style="border-color:var(--border);color:var(--muted);" onmouseover="this.style.borderColor='var(--yellow)';this.style.color='var(--yellow)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2l2 2-6 6H2V8l6-6z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+  </button>` : '';
   return `<div class="link-item">
     <span class="link-titulo" title="${esc(l.titulo)}">${esc(l.titulo)}</span>
     <div class="link-actions">
@@ -1372,6 +1380,7 @@ function renderLinkItem(l) {
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5 2H2a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1V6" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="5" x2="10" y2="1" stroke="currentColor" stroke-width="1.5"/><polyline points="7,1 10,1 10,4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
         Abrir
       </a>
+      ${editBtn}
       ${deleteBtn}
     </div>
   </div>`;
@@ -1409,6 +1418,9 @@ function renderProvas() {
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <a class="link-open" href="${esc(p.url)}" target="_blank" rel="noopener">Abrir</a>
+        ${isAdmin ? `<button class="icon-btn" onclick="editProva('${p.id}',${JSON.stringify(p.titulo)},${JSON.stringify(p.url)},'${p.tipo||''}')" title="Editar" style="border-color:var(--border);color:var(--muted);" onmouseover="this.style.borderColor='var(--yellow)';this.style.color='var(--yellow)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2l2 2-6 6H2V8l6-6z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </button>` : ''}
         ${isAdmin ? `<button class="icon-btn" onclick="deleteProva('${p.id}')" title="Remover">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.8"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.8"/></svg>
         </button>` : ''}
