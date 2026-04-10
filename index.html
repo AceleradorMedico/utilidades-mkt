@@ -1043,15 +1043,18 @@
     <div class="field">
       <label>Categoria *</label>
       <select id="link-cat">
-        <option value="copy_paginas">Copy de Páginas</option>
-        <option value="criativos">Criativos</option>
-        <option value="mensagens">Mensagens</option>
-        <option value="ligacoes">Ligações</option>
+        <option value="copy_paginas">Copy - Páginas</option>
+        <option value="copy_criativos">Copy - Criativos</option>
+        <option value="copy_mensagens">Copy - Mensagens</option>
+        <option value="copy_ligacoes">Copy - Ligações</option>
+        <option value="copy_materiais">Copy - Materiais de Apoio</option>
+        <option value="audio">Áudio</option>
         <option value="ads_estaticos">Ads Estáticos</option>
         <option value="ads_video">Ads Vídeo</option>
         <option value="pagina_captura">Página de Captura</option>
         <option value="pagina_venda">Página de Venda</option>
         <option value="pagina_obrigado">Página de Obrigado</option>
+        <option value="design_geral">Design Geral</option>
       </select>
     </div>
     <div class="field">
@@ -1101,6 +1104,71 @@
   </div>
 </div>
 
+<!-- ========== MODAL: DEBRIEFING ========== -->
+<div class="modal-overlay" id="modal-debriefing">
+  <div class="modal" style="max-width:700px;">
+    <button class="modal-close" onclick="closeModal('modal-debriefing')">×</button>
+    <div class="modal-title">Debriefing do Funil</div>
+    <input type="hidden" id="debriefing-funil-id">
+
+    <div style="max-height:65vh;overflow-y:auto;padding-right:8px;">
+
+      <div class="section-title" style="margin-bottom:10px;">Investimentos</div>
+      <div class="field-row">
+        <div class="field"><label>Total Tráfego (R$)</label><input type="number" id="db-trafego" min="0" step="0.01" placeholder="0,00"></div>
+        <div class="field"><label>Total Disparo (R$)</label><input type="number" id="db-disparo" min="0" step="0.01" placeholder="0,00"></div>
+      </div>
+
+      <div class="section-title" style="margin:14px 0 10px;">Vendas por Canal</div>
+      <div class="invest-form">
+        <div class="field" style="margin:0"><label>WhatsApp</label><input type="number" id="db-vendas-wpp" min="0" placeholder="0"></div>
+        <div class="field" style="margin:0"><label>Ligação</label><input type="number" id="db-vendas-lig" min="0" placeholder="0"></div>
+        <div class="field" style="margin:0"><label>Email</label><input type="number" id="db-vendas-email" min="0" placeholder="0"></div>
+        <div class="field" style="margin:0"><label>Outros</label><input type="number" id="db-vendas-outros" min="0" placeholder="0"></div>
+      </div>
+      <div class="field-row" style="margin-top:10px;">
+        <div class="field"><label>Vendas OB</label><input type="number" id="db-vendas-ob" min="0" placeholder="0"></div>
+        <div class="field"><label>Total MQLs</label><input type="number" id="db-mqls" min="0" placeholder="0"></div>
+      </div>
+
+      <div class="field">
+        <label>Conversão da Página (%)</label>
+        <input type="number" id="db-conversao" min="0" max="100" step="0.01" placeholder="Ex: 12.5">
+      </div>
+
+      <div class="section-title" style="margin:14px 0 10px;">Faixas de Faturamento</div>
+      <div id="db-faixas-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDbRow('faixas')" style="margin-bottom:14px;">+ Adicionar faixa</button>
+
+      <div class="section-title" style="margin-bottom:10px;">Especialidades</div>
+      <div id="db-especialidades-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDbRow('especialidades')" style="margin-bottom:14px;">+ Adicionar especialidade</button>
+
+      <div class="section-title" style="margin-bottom:10px;">Principais Públicos (top 3)</div>
+      <div id="db-publicos-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDbRow('publicos')" style="margin-bottom:14px;">+ Adicionar público</button>
+
+      <div class="section-title" style="margin-bottom:10px;">Principais Ads (top 3)</div>
+      <div id="db-ads-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDbRow('ads')" style="margin-bottom:14px;">+ Adicionar ad</button>
+
+      <div class="section-title" style="margin-bottom:10px;">Aplicações</div>
+      <div id="db-aplicacoes-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDbRow('aplicacoes')" style="margin-bottom:14px;">+ Adicionar aplicação</button>
+
+      <div class="field">
+        <label>Observações Gerais</label>
+        <textarea id="db-observacoes" placeholder="Notas sobre o funil, aprendizados, pontos de atenção..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-debriefing')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDebriefing()">Salvar Debriefing</button>
+    </div>
+  </div>
+</div>
+
 <!-- ========== TOAST ========== -->
 <div id="toast"></div>
 
@@ -1109,7 +1177,7 @@
 // CONFIG SUPABASE
 // ============================================================
 const SUPABASE_URL = 'https://lscviwtqczikgqtaoftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzY3Zpd3RxY3ppa2dxdGFvZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3OTcsImV4cCI6MjA5MDIxMjc5N30.k84a_EoU97H7FVr5rOdspADSD7vZ4IbhBSNjg8Vg0cQ';
+const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1127,15 +1195,18 @@ let currentFunilId = null;
 // CATEGORIAS
 // ============================================================
 const CATEGORIAS = {
-  copy_paginas: 'Copy de Páginas',
-  criativos: 'Criativos',
-  mensagens: 'Mensagens',
-  ligacoes: 'Ligações',
+  copy_paginas: 'Copy - Páginas',
+  copy_criativos: 'Copy - Criativos',
+  copy_mensagens: 'Copy - Mensagens',
+  copy_ligacoes: 'Copy - Ligações',
+  copy_materiais: 'Copy - Materiais de Apoio',
+  audio: 'Áudio',
   ads_estaticos: 'Ads Estáticos',
   ads_video: 'Ads Vídeo',
   pagina_captura: 'Página de Captura',
   pagina_venda: 'Página de Venda',
-  pagina_obrigado: 'Página de Obrigado'
+  pagina_obrigado: 'Página de Obrigado',
+  design_geral: 'Design Geral'
 };
 
 const CANAIS_LABEL = { ads: 'Ads', disparo: 'Disparo', ligacao: 'Ligação', sms: 'SMS' };
@@ -1206,8 +1277,6 @@ function showApp() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-let _loadingDetail = false;
-
 async function goPage(page, funilId = null) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1217,11 +1286,9 @@ async function goPage(page, funilId = null) {
     document.querySelectorAll('.nav-btn')[0].classList.add('active');
     renderFunis();
   } else if (page === 'funil-detail') {
-    if (_loadingDetail) return;
-    _loadingDetail = true;
     document.getElementById('page-funil-detail').classList.add('active');
     currentFunilId = funilId;
-    try { await loadFunilDetail(funilId); } finally { _loadingDetail = false; }
+    await loadFunilDetail(funilId);
   } else if (page === 'provas') {
     document.getElementById('page-provas').classList.add('active');
     document.querySelectorAll('.nav-btn')[1].classList.add('active');
@@ -1311,6 +1378,10 @@ async function loadFunilDetail(id) {
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="2"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="2"/></svg>
         Adicionar Link
       </button>
+      ${f.status === 'ativo'
+        ? `<button class="btn btn-ghost btn-sm" onclick="openDebriefing('${id}')" style="border-color:rgba(245,166,35,0.4);color:var(--yellow);">Desativar + Debriefing</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="openDebriefing('${id}')">Ver Debriefing</button>`
+      }
     </div>` : '';
 
   document.getElementById('funil-detail-content').innerHTML = `
@@ -1370,7 +1441,7 @@ function renderLinkItem(l) {
   const deleteBtn = isAdmin ? `<button class="icon-btn" onclick="deleteLink('${l.id}','${l.funil_id}')" title="Remover">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.8"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.8"/></svg>
   </button>` : '';
-  const editBtn = isAdmin ? `<button class="icon-btn" onclick="editLink('${l.id}','${l.funil_id}','${l.categoria}',${JSON.stringify(l.titulo)},${JSON.stringify(l.url)})" title="Editar" style="border-color:var(--border);color:var(--muted);" onmouseover="this.style.borderColor='var(--yellow)';this.style.color='var(--yellow)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+  const editBtn = isAdmin ? `<button class="icon-btn" onclick="editLink('${l.id}','${l.funil_id}','${l.categoria}','${encodeURIComponent(l.titulo)}','${encodeURIComponent(l.url)}')" title="Editar" style="border-color:var(--border);color:var(--muted);" onmouseover="this.style.borderColor='var(--yellow)';this.style.color='var(--yellow)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2l2 2-6 6H2V8l6-6z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
   </button>` : '';
   return `<div class="link-item">
@@ -1526,15 +1597,15 @@ function editLink(linkId, funilId, categoria, titulo, url) {
   document.getElementById('link-id').value = linkId;
   document.getElementById('link-funil-id').value = funilId;
   document.getElementById('link-cat').value = categoria;
-  document.getElementById('link-titulo').value = titulo;
-  document.getElementById('link-url').value = url;
+  document.getElementById('link-titulo').value = decodeURIComponent(titulo);
+  document.getElementById('link-url').value = decodeURIComponent(url);
   document.getElementById('modal-link-title').textContent = 'Editar Link';
   openModal('modal-link');
 }
 
 async function saveLink() {
   const id = document.getElementById('link-id').value;
-  const funil_id = document.getElementById('link-funil-id').value;
+  const funil_id = document.getElementById('link-funil-id').value || currentFunilId;
   const titulo = document.getElementById('link-titulo').value.trim();
   const url = document.getElementById('link-url').value.trim();
   const categoria = document.getElementById('link-cat').value;
@@ -1660,6 +1731,159 @@ function fmtDate(d) {
 
 function fmtMoney(v) {
   return 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+
+// ============================================================
+// DEBRIEFING
+// ============================================================
+const DB_ROW_TEMPLATES = {
+  faixas: `<div class="db-row field-row" style="margin-bottom:8px;">
+    <input type="text" placeholder="Faixa (ex: R$10k-R$30k)" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;flex:1;">
+    <input type="number" placeholder="Qtd" min="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;width:80px;">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+  </div>`,
+  especialidades: `<div class="db-row field-row" style="margin-bottom:8px;">
+    <input type="text" placeholder="Especialidade" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;flex:1;">
+    <input type="number" placeholder="Qtd" min="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;width:80px;">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+  </div>`,
+  publicos: `<div class="db-row" style="margin-bottom:8px;display:flex;gap:8px;">
+    <input type="text" placeholder="Descrição do público" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;flex:1;">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+  </div>`,
+  ads: `<div class="db-row field-row" style="margin-bottom:8px;">
+    <input type="text" placeholder="Nome do Ad" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;flex:1;">
+    <input type="text" placeholder="Resultado (ex: 3.2% CTR)" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;flex:1;">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+  </div>`,
+  aplicacoes: `<div class="db-row" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;">
+    <input type="text" placeholder="Nome" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;">
+    <select style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;">
+      <option value="lead">Lead</option>
+      <option value="comprador">Comprador</option>
+    </select>
+    <input type="text" placeholder="Observação" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 10px;outline:none;">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">×</button>
+  </div>`
+};
+
+function addDbRow(type, data = null) {
+  const container = document.getElementById(`db-${type === 'publicos' ? 'publicos' : type === 'ads' ? 'ads' : type}-list`);
+  const div = document.createElement('div');
+  div.innerHTML = DB_ROW_TEMPLATES[type];
+  const row = div.firstElementChild;
+
+  if (data) {
+    const inputs = row.querySelectorAll('input, select');
+    if (type === 'faixas' || type === 'especialidades') {
+      inputs[0].value = data.faixa || data.nome || '';
+      inputs[1].value = data.quantidade || '';
+    } else if (type === 'publicos') {
+      inputs[0].value = data;
+    } else if (type === 'ads') {
+      inputs[0].value = data.nome || '';
+      inputs[1].value = data.resultado || '';
+    } else if (type === 'aplicacoes') {
+      inputs[0].value = data.nome || '';
+      row.querySelectorAll('select')[0].value = data.tipo || 'lead';
+      inputs[1].value = data.observacao || '';
+    }
+  }
+
+  container.appendChild(row);
+}
+
+function getDbRows(type) {
+  const listId = `db-${type}-list`;
+  const rows = document.getElementById(listId).querySelectorAll('.db-row');
+  const result = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const selects = row.querySelectorAll('select');
+    if (type === 'faixas') {
+      if (inputs[0].value.trim()) result.push({ faixa: inputs[0].value.trim(), quantidade: parseInt(inputs[1].value) || 0 });
+    } else if (type === 'especialidades') {
+      if (inputs[0].value.trim()) result.push({ nome: inputs[0].value.trim(), quantidade: parseInt(inputs[1].value) || 0 });
+    } else if (type === 'publicos') {
+      if (inputs[0].value.trim()) result.push(inputs[0].value.trim());
+    } else if (type === 'ads') {
+      if (inputs[0].value.trim()) result.push({ nome: inputs[0].value.trim(), resultado: inputs[1].value.trim() });
+    } else if (type === 'aplicacoes') {
+      if (inputs[0].value.trim()) result.push({ nome: inputs[0].value.trim(), tipo: selects[0].value, observacao: inputs[1].value.trim() });
+    }
+  });
+  return result;
+}
+
+async function openDebriefing(funilId) {
+  document.getElementById('debriefing-funil-id').value = funilId;
+  // Clear all lists
+  ['faixas', 'especialidades', 'publicos', 'ads', 'aplicacoes'].forEach(t => {
+    document.getElementById(`db-${t}-list`).innerHTML = '';
+  });
+  // Clear fields
+  ['db-trafego','db-disparo','db-vendas-wpp','db-vendas-lig','db-vendas-email','db-vendas-outros','db-vendas-ob','db-mqls','db-conversao','db-observacoes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  // Load existing debriefing if any
+  const { data } = await db.from('debriefings').select('*').eq('funil_id', funilId).single();
+  if (data) {
+    document.getElementById('db-trafego').value = data.total_trafego || '';
+    document.getElementById('db-disparo').value = data.total_disparo || '';
+    document.getElementById('db-vendas-wpp').value = data.vendas_whatsapp || '';
+    document.getElementById('db-vendas-lig').value = data.vendas_ligacao || '';
+    document.getElementById('db-vendas-email').value = data.vendas_email || '';
+    document.getElementById('db-vendas-outros').value = data.vendas_outros || '';
+    document.getElementById('db-vendas-ob').value = data.vendas_ob || '';
+    document.getElementById('db-mqls').value = data.total_mqls || '';
+    document.getElementById('db-conversao').value = data.conversao_pagina || '';
+    document.getElementById('db-observacoes').value = data.observacoes || '';
+    (data.faixas_faturamento || []).forEach(r => addDbRow('faixas', r));
+    (data.especialidades || []).forEach(r => addDbRow('especialidades', r));
+    (data.principais_publicos || []).forEach(r => addDbRow('publicos', r));
+    (data.principais_ads || []).forEach(r => addDbRow('ads', r));
+    (data.aplicacoes || []).forEach(r => addDbRow('aplicacoes', r));
+  }
+
+  openModal('modal-debriefing');
+}
+
+async function saveDebriefing() {
+  const funil_id = document.getElementById('debriefing-funil-id').value;
+
+  const payload = {
+    funil_id,
+    total_trafego: parseFloat(document.getElementById('db-trafego').value) || 0,
+    total_disparo: parseFloat(document.getElementById('db-disparo').value) || 0,
+    vendas_whatsapp: parseInt(document.getElementById('db-vendas-wpp').value) || 0,
+    vendas_ligacao: parseInt(document.getElementById('db-vendas-lig').value) || 0,
+    vendas_email: parseInt(document.getElementById('db-vendas-email').value) || 0,
+    vendas_outros: parseInt(document.getElementById('db-vendas-outros').value) || 0,
+    vendas_ob: parseInt(document.getElementById('db-vendas-ob').value) || 0,
+    total_mqls: parseInt(document.getElementById('db-mqls').value) || 0,
+    conversao_pagina: parseFloat(document.getElementById('db-conversao').value) || 0,
+    observacoes: document.getElementById('db-observacoes').value.trim() || null,
+    faixas_faturamento: getDbRows('faixas'),
+    especialidades: getDbRows('especialidades'),
+    principais_publicos: getDbRows('publicos'),
+    principais_ads: getDbRows('ads'),
+    aplicacoes: getDbRows('aplicacoes'),
+  };
+
+  // Upsert debriefing
+  const { error: dbError } = await db.from('debriefings').upsert(payload, { onConflict: 'funil_id' });
+  if (dbError) { toast('Erro ao salvar debriefing', 'error'); return; }
+
+  // Set funil as inativo
+  const { error: funilError } = await db.from('funis').update({ status: 'inativo' }).eq('id', funil_id);
+  if (funilError) { toast('Debriefing salvo, mas erro ao desativar funil', 'error'); }
+
+  closeModal('modal-debriefing');
+  toast('Debriefing salvo e funil desativado!', 'success');
+  await loadFunis();
+  await loadFunilDetail(funil_id);
 }
 
 // ============================================================
