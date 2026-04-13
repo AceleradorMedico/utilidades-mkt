@@ -1177,7 +1177,7 @@
 // CONFIG SUPABASE
 // ============================================================
 const SUPABASE_URL = 'https://lscviwtqczikgqtaoftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzY3Zpd3RxY3ppa2dxdGFvZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzY3OTcsImV4cCI6MjA5MDIxMjc5N30.k84a_EoU97H7FVr5rOdspADSD7vZ4IbhBSNjg8Vg0cQ';
+const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1288,7 +1288,11 @@ async function goPage(page, funilId = null) {
   } else if (page === 'funil-detail') {
     document.getElementById('page-funil-detail').classList.add('active');
     currentFunilId = funilId;
-    await loadFunilDetail(funilId);
+    if (funilId) {
+      await loadFunilDetail(funilId);
+    } else {
+      document.getElementById('funil-detail-content').innerHTML = '<div class="empty-state"><p>Funil não encontrado</p></div>';
+    }
   } else if (page === 'provas') {
     document.getElementById('page-provas').classList.add('active');
     document.querySelectorAll('.nav-btn')[1].classList.add('active');
@@ -1328,7 +1332,7 @@ function renderFunis() {
   }
 
   container.innerHTML = `<div class="funis-grid">${funis.map(f => `
-    <div class="funil-card" onclick="goPage('funil-detail','${f.id}')">
+    <div class="funil-card" onclick="goPage('funil-detail','${f.id}')" data-id="${f.id}">
       <div class="funil-card-header">
         <div class="funil-nome">${esc(f.nome)}</div>
         <span class="status-badge status-${f.status}">${f.status}</span>
@@ -1348,15 +1352,24 @@ function renderFunis() {
 // FUNIL DETAIL
 // ============================================================
 async function loadFunilDetail(id) {
-  document.getElementById('funil-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div> Carregando...</div>';
+  if (!id) { goPage('funis'); return; }
+  const el = document.getElementById('funil-detail-content');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando...</div>';
 
-  const [funilRes, linksRes, investRes] = await Promise.all([
-    db.from('funis').select('*').eq('id', id).single(),
-    db.from('links_funil').select('*').eq('funil_id', id).order('criado_em'),
-    db.from('investimentos').select('*').eq('funil_id', id)
-  ]);
+  let funilRes, linksRes, investRes;
+  try {
+    [funilRes, linksRes, investRes] = await Promise.all([
+      db.from('funis').select('*').eq('id', id).single(),
+      db.from('links_funil').select('*').eq('funil_id', id).order('criado_em'),
+      db.from('investimentos').select('*').eq('funil_id', id)
+    ]);
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state"><p>Erro ao carregar</p><small>Tente novamente</small></div>';
+    return;
+  }
 
-  if (funilRes.error) { toast('Erro ao carregar funil', 'error'); return; }
+  if (funilRes.error) { toast('Erro ao carregar funil', 'error'); el.innerHTML = '<div class="empty-state"><p>Funil não encontrado</p></div>'; return; }
 
   const f = funilRes.data;
   const links = linksRes.data || [];
