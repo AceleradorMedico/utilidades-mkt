@@ -1549,6 +1549,7 @@ async function openFunilModal(id = null) {
 }
 
 async function saveFunil() {
+  if (!await ensureSession()) return;
   const id = document.getElementById('funil-id').value;
   const nome = document.getElementById('funil-nome').value.trim();
   const status = document.getElementById('funil-status').value;
@@ -1617,6 +1618,7 @@ function editLink(linkId, funilId, categoria, titulo, url) {
 }
 
 async function saveLink() {
+  if (!await ensureSession()) return;
   const id = document.getElementById('link-id').value;
   const funil_id = document.getElementById('link-funil-id').value || currentFunilId;
   const titulo = document.getElementById('link-titulo').value.trim();
@@ -1643,6 +1645,7 @@ async function saveLink() {
 }
 
 async function deleteLink(linkId, funilId) {
+  if (!await ensureSession()) return;
   if (!confirm('Remover este link?')) return;
   const { error } = await db.from('links_funil').delete().eq('id', linkId);
   if (error) { toast('Erro ao remover link', 'error'); return; }
@@ -1672,6 +1675,7 @@ function editProva(id, titulo, url, tipo) {
 }
 
 async function saveProva() {
+  if (!await ensureSession()) return;
   const id = document.getElementById('prova-id').value;
   const titulo = document.getElementById('prova-titulo').value.trim();
   const url = document.getElementById('prova-url').value.trim();
@@ -1699,6 +1703,7 @@ async function saveProva() {
 }
 
 async function deleteProva(id) {
+  if (!await ensureSession()) return;
   if (!confirm('Remover esta prova social?')) return;
   const { error } = await db.from('provas_sociais').delete().eq('id', id);
   if (error) { toast('Erro ao remover', 'error'); return; }
@@ -1864,6 +1869,7 @@ async function openDebriefing(funilId) {
 }
 
 async function saveDebriefing() {
+  if (!await ensureSession()) return;
   const funil_id = document.getElementById('debriefing-funil-id').value;
 
   const payload = {
@@ -1898,6 +1904,36 @@ async function saveDebriefing() {
   await loadFunis();
   await loadFunilDetail(funil_id);
 }
+
+// ============================================================
+// SESSION REFRESH
+// ============================================================
+async function ensureSession() {
+  const { data: { session }, error } = await db.auth.getSession();
+  if (!session) {
+    toast('Sessão expirada. Faça login novamente.', 'error');
+    setTimeout(() => showLogin(), 1500);
+    return false;
+  }
+  // Refresh if token expires in less than 60 seconds
+  const expiresAt = session.expires_at * 1000;
+  if (Date.now() > expiresAt - 60000) {
+    const { error: refreshError } = await db.auth.refreshSession();
+    if (refreshError) {
+      toast('Sessão expirada. Faça login novamente.', 'error');
+      setTimeout(() => showLogin(), 1500);
+      return false;
+    }
+  }
+  return true;
+}
+
+// Refresh session when tab becomes visible again
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && currentUser) {
+    await db.auth.refreshSession();
+  }
+});
 
 // ============================================================
 // BOOT
