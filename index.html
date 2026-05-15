@@ -1598,6 +1598,7 @@ async function saveFunil() {
 // MODAL: LINK
 // ============================================================
 function openLinkModal(funilId) {
+  currentFunilId = funilId;
   document.getElementById('link-funil-id').value = funilId;
   document.getElementById('link-id').value = '';
   document.getElementById('link-titulo').value = '';
@@ -1608,6 +1609,7 @@ function openLinkModal(funilId) {
 }
 
 function editLink(linkId, funilId, categoria, titulo, url) {
+  currentFunilId = funilId;
   document.getElementById('link-id').value = linkId;
   document.getElementById('link-funil-id').value = funilId;
   document.getElementById('link-cat').value = categoria;
@@ -1620,7 +1622,8 @@ function editLink(linkId, funilId, categoria, titulo, url) {
 async function saveLink() {
   if (!await ensureSession()) return;
   const id = document.getElementById('link-id').value;
-  const funil_id = document.getElementById('link-funil-id').value || currentFunilId;
+  const funil_id = currentFunilId || document.getElementById('link-funil-id').value;
+  if (!funil_id) { toast('Erro: funil não identificado. Feche e abra novamente.', 'error'); return; }
   const titulo = document.getElementById('link-titulo').value.trim();
   const url = document.getElementById('link-url').value.trim();
   const categoria = document.getElementById('link-cat').value;
